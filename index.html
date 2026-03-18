@@ -473,14 +473,19 @@ body { font-family: 'Geist', sans-serif; background: #F5F2ED; color: #1A1814; he
 // ══════════════════════════════════════════
 const SUPABASE_URL = 'https://ccbjhuuzidqxeplrvtrj.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjYmpodXV6aWRxeGVwbHJ2dHJqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4NDA5MjMsImV4cCI6MjA4OTQxNjkyM30.HVfW1Co6vUw9NDJWoV3pUU53w-preCFyYENr3CAagec';
-const HDR = { 'Content-Type':'application/json', 'apikey':SUPABASE_KEY, 'Authorization':'Bearer '+SUPABASE_KEY, 'Prefer':'return=representation' };
+const HDR = { 'Content-Type':'application/json', 'apikey':SUPABASE_KEY, 'Authorization':'Bearer '+SUPABASE_KEY };
 
 async function sbFetch(path, opts = {}) {
-  const { headers: extraHeaders, ...restOpts } = opts;
-  const isDelete = restOpts.method === 'DELETE';
+  const method = opts.method || 'GET';
+  const needsRepresentation = method === 'POST' || method === 'PATCH';
   const res = await fetch(SUPABASE_URL + '/rest/v1/' + path, {
-    headers: { ...HDR, ...(isDelete ? { 'Prefer': '' } : {}), ...(extraHeaders || {}) },
-    ...restOpts
+    method,
+    headers: {
+      ...HDR,
+      ...(needsRepresentation ? { 'Prefer': 'return=representation' } : {}),
+      ...(opts.headers || {}),
+    },
+    ...(opts.body ? { body: opts.body } : {}),
   });
   if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.message || e.error || 'HTTP '+res.status); }
   const txt = await res.text();
