@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ManuaisGov · Repositório de Manuais</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: 'Geist', sans-serif;
+  background: #F5F2ED; color: #1A1814;
+  height: 100vh; display: flex; flex-direction: column; overflow: hidden;
+}
+:root {
+  --bg: #F5F2ED; --bg2: #EDEAE3; --bg3: #E4E0D7;
+  --ink: #1A1814; --ink2: #4A4640; --ink3: #8A8680;
+  --accent: #C8602A; --accent-dim: rgba(200,96,42,0.12); --accent-hover: #A84E22;
+  --border: rgba(26,24,20,0.1); --border2: rgba(26,24,20,0.06);
+  --shadow: 0 1px 3px rgba(26,24,20,0.08), 0 4px 16px rgba(26,24,20,0.04);
+  --shadow-lg: 0 4px 24px rgba(26,24,20,0.12), 0 1px 4px rgba(26,24,20,0.06);
+  --sidebar: 300px;
+}
+.app { display:flex; flex-direction:column; height:100vh; overflow:hidden; }
+
+/* TOPBAR */
+.topbar { display:flex; align-items:center; height:52px; background:#1A1814; padding:0 20px; flex-shrink:0; z-index:50; }
+.logo { display:flex; align-items:center; gap:10px; color:#F5F2ED; font-family:'Instrument Serif',serif; font-size:20px; margin-right:24px; }
+.logo-mark { width:28px; height:28px; background:var(--accent); border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:12px; color:#fff; font-family:'Geist',sans-serif; font-weight:600; letter-spacing:-0.03em; }
+.topbar-sep { width:1px; height:24px; background:rgba(255,255,255,0.12); margin:0 16px; }
+.topbar-info { font-size:13px; color:rgba(245,242,237,0.4); }
+.topbar-right { margin-left:auto; display:flex; align-items:center; gap:8px; }
+.db-status { display:flex; align-items:center; gap:6px; font-size:12px; padding:5px 10px; border-radius:6px; border:1px solid rgba(255,255,255,0.1); }
+.db-status .dot { width:6px; height:6px; border-radius:50%; background:#888; transition:background 0.3s; }
+.db-status .dot.ok { background:#22C55E; }
+.db-status .dot.err { background:#EF4444; }
+.db-status .dot.loading { background:#F59E0B; animation:blink 1s infinite; }
+.db-status .label { color:rgba(245,242,237,0.5); }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+.btn-new { display:flex; align-items:center; gap:7px; background:var(--accent); color:#fff; border:none; border-radius:7px; padding:7px 14px; font-size:13px; font-weight:500; font-family:'Geist',sans-serif; cursor:pointer; transition:background 0.15s,transform 0.1s; }
+.btn-new:hover { background:var(--accent-hover); }
+.btn-new:active { transform:scale(0.97); }
+
+/* BODY */
+.body { display:flex; flex:1; overflow:hidden; }
+
+/* SIDEBAR */
+.sidebar { width:var(--sidebar); flex-shrink:0; background:#EDEAE3; border-right:1px solid var(--border); display:flex; flex-direction:column; overflow:hidden; }
+.sidebar-head { padding:14px 14px 10px; border-bottom:1px solid var(--border2); flex-shrink:0; }
+.search-box { display:flex; align-items:center; gap:8px; background:#F5F2ED; border:1px solid var(--border); border-radius:8px; padding:8px 12px; transition:border-color 0.2s; }
+.search-box:focus-within { border-color:var(--accent); }
+.search-box svg { color:var(--ink3); flex-shrink:0; }
+.search-box input { background:none; border:none; outline:none; font-size:13px; font-family:'Geist',sans-serif; color:var(--ink); width:100%; }
+.search-box input::placeholder { color:var(--ink3); }
+
+/* SYSTEM TABS */
+.sys-tabs { display:flex; flex-direction:column; gap:2px; padding:10px 10px 8px; border-bottom:1px solid var(--border2); flex-shrink:0; }
+.sys-tab-label { font-size:10px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:var(--ink3); padding:0 6px; margin-bottom:4px; }
+.sys-tab { display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:8px; cursor:pointer; border:1px solid transparent; transition:all 0.15s; background:transparent; font-family:'Geist',sans-serif; text-align:left; width:100%; }
+.sys-tab:hover { background:var(--bg3); }
+.sys-tab.active { background:var(--bg); border-color:var(--border); box-shadow:var(--shadow); }
+.sys-tab-icon { width:30px; height:30px; border-radius:7px; display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; }
+.sys-tab-icon.all { background:var(--bg3); }
+.sys-tab-icon.sismat { background:rgba(200,96,42,0.12); }
+.sys-tab-info { flex:1; min-width:0; }
+.sys-tab-name { font-size:13px; font-weight:500; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.sys-tab-count { font-size:11px; color:var(--ink3); }
+.sys-tab-pill { font-size:10px; font-weight:600; padding:2px 7px; border-radius:100px; background:var(--accent-dim); color:var(--accent); flex-shrink:0; }
+
+/* DOC LIST */
+.doc-list { flex:1; overflow-y:auto; padding:8px; }
+.doc-list::-webkit-scrollbar { width:4px; }
+.doc-list::-webkit-scrollbar-thumb { background:var(--bg3); border-radius:2px; }
+.doc-group-header { display:flex; align-items:center; gap:8px; padding:10px 8px 6px; margin-top:4px; }
+.doc-group-label { font-size:10px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:var(--ink3); }
+.doc-group-line { flex:1; height:1px; background:var(--border2); }
+.doc-item { border-radius:8px; padding:11px 12px; cursor:pointer; transition:background 0.15s; margin-bottom:2px; position:relative; border:1px solid transparent; animation:fadeIn 0.2s ease both; }
+.doc-item:hover { background:var(--bg3); }
+.doc-item.active { background:var(--bg); border-color:var(--border); box-shadow:var(--shadow); }
+.doc-item-title { font-size:13px; font-weight:500; color:var(--ink); margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding-right:54px; }
+.doc-item-meta { font-size:11px; color:var(--ink3); display:flex; align-items:center; gap:6px; }
+.doc-item-preview { font-size:11.5px; color:var(--ink3); margin-top:4px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; line-height:1.5; }
+.doc-item-actions { position:absolute; top:10px; right:8px; display:none; gap:2px; }
+.doc-item:hover .doc-item-actions, .doc-item.active .doc-item-actions { display:flex; }
+.icon-btn { width:26px; height:26px; border-radius:5px; border:none; background:transparent; cursor:pointer; display:flex; align-items:center; justify-content:center; color:var(--ink3); transition:background 0.15s,color 0.15s; }
+.icon-btn:hover { background:var(--bg3); color:var(--ink); }
+.icon-btn.danger:hover { background:#FEE2E2; color:#DC2626; }
+.sys-badge { display:inline-flex; align-items:center; background:var(--accent-dim); color:var(--accent); font-size:10px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; padding:2px 7px; border-radius:4px; }
+.sidebar-footer { padding:10px 14px; border-top:1px solid var(--border2); font-size:11px; color:var(--ink3); flex-shrink:0; }
+.list-empty { padding:32px 16px; text-align:center; color:var(--ink3); font-size:13px; line-height:1.6; }
+
+/* LOADING SKELETON */
+.skeleton { border-radius:8px; padding:11px 12px; margin-bottom:2px; }
+.skel-line { background:var(--bg3); border-radius:4px; animation:shimmer 1.4s infinite; }
+@keyframes shimmer { 0%,100%{opacity:0.5} 50%{opacity:1} }
+
+/* MAIN */
+.main { flex:1; display:flex; flex-direction:column; overflow:hidden; background:var(--bg); }
+
+/* EMPTY STATE */
+.empty-state { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; }
+.empty-icon { width:72px; height:72px; background:var(--bg2); border-radius:18px; display:flex; align-items:center; justify-content:center; font-size:32px; }
+.empty-state h2 { font-family:'Instrument Serif',serif; font-size:24px; color:var(--ink2); font-weight:400; }
+.empty-state p { font-size:14px; color:var(--ink3); text-align:center; max-width:280px; line-height:1.6; }
+
+/* VIEWER */
+.viewer { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+.viewer-topbar { display:flex; align-items:center; padding:13px 28px; border-bottom:1px solid var(--border); gap:10px; flex-shrink:0; }
+.viewer-title { font-family:'Instrument Serif',serif; font-size:19px; color:var(--ink); flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.viewer-meta { font-size:12px; color:var(--ink3); }
+.btn-edit, .btn-delete { display:flex; align-items:center; gap:6px; padding:7px 14px; border-radius:7px; font-size:13px; font-weight:500; font-family:'Geist',sans-serif; cursor:pointer; transition:all 0.15s; border:1px solid var(--border); }
+.btn-edit { background:var(--bg2); color:var(--ink2); }
+.btn-edit:hover { background:var(--bg3); color:var(--ink); }
+.btn-delete { background:transparent; color:#DC2626; border-color:rgba(220,38,38,0.2); }
+.btn-delete:hover { background:#FEE2E2; }
+.viewer-content { flex:1; overflow-y:auto; padding:40px 60px; }
+.viewer-content::-webkit-scrollbar { width:6px; }
+.viewer-content::-webkit-scrollbar-thumb { background:var(--bg3); border-radius:3px; }
+.doc-paper { max-width:720px; margin:0 auto; }
+.doc-paper .doc-heading { font-family:'Instrument Serif',serif; font-size:36px; font-weight:400; color:var(--ink); margin-bottom:8px; line-height:1.15; }
+.doc-paper .doc-byline { font-size:13px; color:var(--ink3); margin-bottom:32px; display:flex; align-items:center; gap:12px; flex-wrap:wrap; padding-bottom:24px; border-bottom:1px solid var(--border); }
+.doc-paper .doc-body { font-size:15.5px; line-height:1.8; color:var(--ink2); font-family:'Geist',sans-serif; font-weight:300; }
+.doc-paper .doc-body h1 { font-family:'Instrument Serif',serif; font-size:28px; font-weight:400; color:var(--ink); margin:24px 0 12px; }
+.doc-paper .doc-body h2 { font-family:'Instrument Serif',serif; font-size:22px; font-weight:400; color:var(--ink); margin:20px 0 10px; }
+.doc-paper .doc-body h3 { font-size:17px; font-weight:600; color:var(--ink); margin:16px 0 8px; }
+.doc-paper .doc-body ul,.doc-paper .doc-body ol { padding-left:24px; margin:8px 0 12px; }
+.doc-paper .doc-body li { margin-bottom:4px; }
+.doc-paper .doc-body blockquote { border-left:3px solid var(--accent); padding:8px 16px; margin:16px 0; color:var(--ink3); font-style:italic; background:var(--accent-dim); border-radius:0 6px 6px 0; }
+
+/* EDITOR */
+.editor-wrap { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+.editor-topbar { display:flex; align-items:center; padding:12px 20px; border-bottom:1px solid var(--border); gap:10px; flex-shrink:0; background:var(--bg); }
+.editor-title-input { flex:1; background:none; border:none; outline:none; font-family:'Instrument Serif',serif; font-size:20px; color:var(--ink); }
+.editor-title-input::placeholder { color:var(--ink3); }
+.editor-sys-select { font-size:12px; font-family:'Geist',sans-serif; border:1px solid var(--accent); border-radius:7px; padding:6px 10px; background:var(--accent-dim); color:var(--accent); font-weight:600; outline:none; cursor:pointer; }
+.btn-save { display:flex; align-items:center; gap:6px; background:var(--ink); color:var(--bg); border:none; border-radius:7px; padding:8px 16px; font-size:13px; font-weight:500; font-family:'Geist',sans-serif; cursor:pointer; transition:all 0.15s; }
+.btn-save:hover { background:#3A3530; }
+.btn-save:active { transform:scale(0.97); }
+.btn-save:disabled { opacity:0.5; cursor:not-allowed; }
+.btn-cancel-edit { background:none; border:1px solid var(--border); border-radius:7px; padding:8px 14px; font-size:13px; color:var(--ink2); font-family:'Geist',sans-serif; cursor:pointer; transition:background 0.15s; }
+.btn-cancel-edit:hover { background:var(--bg2); }
+
+/* TOOLBAR */
+.editor-toolbar { display:flex; align-items:center; gap:2px; padding:7px 20px; border-bottom:1px solid var(--border); flex-shrink:0; background:var(--bg2); flex-wrap:wrap; }
+.toolbar-sep { width:1px; height:20px; background:var(--border); margin:0 4px; }
+.toolbar-btn { width:30px; height:30px; border-radius:6px; border:none; background:transparent; cursor:pointer; display:flex; align-items:center; justify-content:center; color:var(--ink2); font-size:13px; font-family:'Geist',sans-serif; font-weight:500; transition:background 0.12s,color 0.12s; }
+.toolbar-btn:hover { background:var(--bg3); color:var(--ink); }
+.toolbar-select { font-size:12px; font-family:'Geist',sans-serif; border:1px solid var(--border); border-radius:6px; padding:4px 8px; background:var(--bg); color:var(--ink2); outline:none; cursor:pointer; height:30px; }
+.editor-area { flex:1; overflow-y:auto; padding:40px 60px; }
+.editor-area::-webkit-scrollbar { width:6px; }
+.editor-area::-webkit-scrollbar-thumb { background:var(--bg3); border-radius:3px; }
+.editor-content { max-width:720px; margin:0 auto; min-height:400px; outline:none; font-size:15.5px; line-height:1.8; color:var(--ink2); font-family:'Geist',sans-serif; font-weight:300; caret-color:var(--accent); }
+.editor-content:empty::before { content:'Comece a escrever o manual aqui…'; color:var(--ink3); pointer-events:none; }
+.editor-content h1 { font-family:'Instrument Serif',serif; font-size:28px; font-weight:400; color:var(--ink); margin:24px 0 12px; line-height:1.2; }
+.editor-content h2 { font-family:'Instrument Serif',serif; font-size:22px; font-weight:400; color:var(--ink); margin:20px 0 10px; }
+.editor-content h3 { font-size:17px; font-weight:600; color:var(--ink); margin:16px 0 8px; }
+.editor-content p { margin:0 0 12px; }
+.editor-content ul,.editor-content ol { padding-left:24px; margin:8px 0 12px; }
+.editor-content li { margin-bottom:4px; }
+.editor-content blockquote { border-left:3px solid var(--accent); padding:8px 16px; margin:16px 0; color:var(--ink3); font-style:italic; background:var(--accent-dim); border-radius:0 6px 6px 0; }
+.editor-content code { background:var(--bg3); padding:2px 6px; border-radius:4px; font-family:monospace; font-size:13px; color:var(--ink); }
+.editor-content hr { border:none; border-top:1px solid var(--border); margin:24px 0; }
+.editor-statusbar { display:flex; align-items:center; gap:16px; padding:7px 24px; border-top:1px solid var(--border); font-size:11px; color:var(--ink3); flex-shrink:0; background:var(--bg2); }
+.status-saved { display:flex; align-items:center; gap:5px; margin-left:auto; }
+.status-dot { width:6px; height:6px; border-radius:50%; background:#22C55E; }
+
+/* MODALS */
+.modal-overlay { position:fixed; inset:0; background:rgba(26,24,20,0.5); backdrop-filter:blur(6px); z-index:200; display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity 0.2s; }
+.modal-overlay.open { opacity:1; pointer-events:all; }
+.modal { background:var(--bg); border:1px solid var(--border); border-radius:14px; padding:28px; width:420px; box-shadow:var(--shadow-lg); transform:translateY(10px); transition:transform 0.2s; }
+.modal-overlay.open .modal { transform:translateY(0); }
+.modal h3 { font-family:'Instrument Serif',serif; font-size:20px; font-weight:400; margin-bottom:18px; }
+.modal p { font-size:14px; color:var(--ink2); line-height:1.6; margin-bottom:20px; }
+.modal-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:20px; }
+.btn-confirm-delete { background:#DC2626; color:#fff; border:none; border-radius:7px; padding:8px 18px; font-size:13px; font-weight:500; font-family:'Geist',sans-serif; cursor:pointer; }
+.btn-confirm-delete:hover { background:#B91C1C; }
+.btn-confirm-delete:disabled { opacity:0.5; cursor:not-allowed; }
+.btn-modal-cancel { background:var(--bg2); color:var(--ink2); border:1px solid var(--border); border-radius:7px; padding:8px 14px; font-size:13px; font-family:'Geist',sans-serif; cursor:pointer; }
+.btn-modal-cancel:hover { background:var(--bg3); }
+.field-group { display:flex; flex-direction:column; gap:5px; margin-bottom:16px; }
+.field-label { font-size:12px; font-weight:500; color:var(--ink2); }
+.field-input { padding:9px 12px; border:1px solid var(--border); border-radius:8px; font-size:14px; font-family:'Geist',sans-serif; color:var(--ink); background:var(--bg2); outline:none; transition:border-color 0.2s; }
+.field-input:focus { border-color:var(--accent); }
+.sys-option-grid { display:flex; flex-direction:column; gap:8px; }
+.sys-option { display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:9px; border:1px solid var(--border); cursor:pointer; transition:all 0.15s; background:var(--bg2); }
+.sys-option:hover { border-color:var(--accent); background:var(--accent-dim); }
+.sys-option.selected { border-color:var(--accent); background:var(--accent-dim); }
+.sys-option-icon { width:36px; height:36px; border-radius:8px; background:var(--bg3); display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+.sys-option.selected .sys-option-icon { background:rgba(200,96,42,0.15); }
+.sys-option-text { flex:1; }
+.sys-option-name { font-size:14px; font-weight:600; color:var(--ink); }
+.sys-option-full { font-size:11px; color:var(--ink3); margin-top:1px; }
+.sys-option-check { width:18px; height:18px; border-radius:50%; border:2px solid var(--border); flex-shrink:0; display:flex; align-items:center; justify-content:center; transition:all 0.15s; }
+.sys-option.selected .sys-option-check { background:var(--accent); border-color:var(--accent); }
+.sys-option.selected .sys-option-check::after { content:''; width:6px; height:6px; background:#fff; border-radius:50%; display:block; }
+
+/* TOAST */
+.toast { position:fixed; bottom:24px; right:24px; background:#1A1814; color:#F5F2ED; padding:12px 18px; border-radius:9px; font-size:13px; display:flex; align-items:center; gap:10px; z-index:300; transform:translateY(60px); opacity:0; transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1),opacity 0.3s; box-shadow:var(--shadow-lg); }
+.toast.show { transform:translateY(0); opacity:1; }
+.toast.error { background:#7F1D1D; }
+
+@keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="logo">
+      <div class="logo-mark">MG</div>
+      ManuaisGov
+    </div>
+    <div class="topbar-sep"></div>
+    <span class="topbar-info" id="topbarInfo">Repositório de Manuais</span>
+    <div class="topbar-right">
+      <div class="db-status" id="dbStatus">
+        <div class="dot loading" id="dbDot"></div>
+        <span class="label" id="dbLabel">Conectando…</span>
+      </div>
+      <button class="btn-new" onclick="openNewDocModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Novo manual
+      </button>
+    </div>
+  </div>
+
+  <!-- BODY -->
+  <div class="body">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <div class="sidebar-head">
+        <div class="search-box">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" id="searchInput" placeholder="Buscar manuais…" oninput="filterDocs(this.value)">
+        </div>
+      </div>
+
+      <div class="sys-tabs">
+        <div class="sys-tab-label">Sistemas</div>
+        <button class="sys-tab active" onclick="setSystem('all', this)">
+          <div class="sys-tab-icon all">📚</div>
+          <div class="sys-tab-info">
+            <div class="sys-tab-name">Todos os sistemas</div>
+            <div class="sys-tab-count" id="countAll">—</div>
+          </div>
+        </button>
+        <div id="systemTabsContainer"></div>
+      </div>
+
+      <div class="doc-list" id="docList">
+        <div class="skeleton">
+          <div class="skel-line" style="height:13px;width:70%;margin-bottom:8px;"></div>
+          <div class="skel-line" style="height:11px;width:45%;margin-bottom:6px;"></div>
+          <div class="skel-line" style="height:11px;width:90%;"></div>
+        </div>
+      </div>
+      <div class="sidebar-footer" id="sidebarFooter">Carregando…</div>
+    </div>
+
+    <!-- MAIN -->
+    <div class="main">
+
+      <div class="empty-state" id="emptyState">
+        <div class="empty-icon">📋</div>
+        <h2>Nenhum manual aberto</h2>
+        <p>Selecione um manual na lista ou crie um novo documento.</p>
+        <button class="btn-new" onclick="openNewDocModal()" style="margin-top:4px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Criar primeiro manual
+        </button>
+      </div>
+
+      <!-- VIEWER -->
+      <div class="viewer" id="viewerPanel" style="display:none;">
+        <div class="viewer-topbar">
+          <div class="viewer-title" id="viewerTitle"></div>
+          <span id="viewerSysBadge"></span>
+          <span class="viewer-meta" id="viewerMeta"></span>
+          <button class="btn-edit" onclick="editCurrent()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Editar
+          </button>
+          <button class="btn-delete" onclick="confirmDelete()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+            Excluir
+          </button>
+        </div>
+        <div class="viewer-content">
+          <div class="doc-paper">
+            <div class="doc-heading" id="viewerDocTitle"></div>
+            <div class="doc-byline" id="viewerDocByline"></div>
+            <div class="doc-body" id="viewerDocBody"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- EDITOR -->
+      <div class="editor-wrap" id="editorPanel" style="display:none;">
+        <div class="editor-topbar">
+          <input class="editor-title-input" id="editorTitleInput" type="text" placeholder="Título do manual…">
+          <select class="editor-sys-select" id="editorSysSelect"></select>
+          <button class="btn-cancel-edit" onclick="cancelEdit()">Cancelar</button>
+          <button class="btn-save" id="btnSave" onclick="saveDoc()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            Salvar
+          </button>
+        </div>
+        <div class="editor-toolbar">
+          <select class="toolbar-select" onchange="formatBlock(this.value); this.value=''">
+            <option value="">Formatação…</option>
+            <option value="h1">Título 1</option>
+            <option value="h2">Título 2</option>
+            <option value="h3">Título 3</option>
+            <option value="p">Parágrafo</option>
+            <option value="blockquote">Citação</option>
+          </select>
+          <div class="toolbar-sep"></div>
+          <button class="toolbar-btn" onclick="exec('bold')" title="Negrito"><b>N</b></button>
+          <button class="toolbar-btn" onclick="exec('italic')" title="Itálico"><i>I</i></button>
+          <button class="toolbar-btn" onclick="exec('underline')" title="Sublinhado" style="text-decoration:underline;">S</button>
+          <button class="toolbar-btn" onclick="exec('strikeThrough')" title="Riscado"><span style="text-decoration:line-through;">R</span></button>
+          <div class="toolbar-sep"></div>
+          <button class="toolbar-btn" onclick="exec('justifyLeft')" title="Esquerda"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="18" y2="18"/></svg></button>
+          <button class="toolbar-btn" onclick="exec('justifyCenter')" title="Centro"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg></button>
+          <button class="toolbar-btn" onclick="exec('justifyFull')" title="Justificar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+          <div class="toolbar-sep"></div>
+          <button class="toolbar-btn" onclick="exec('insertUnorderedList')" title="Lista"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="9" y1="6" x2="20" y2="6"/><line x1="9" y1="12" x2="20" y2="12"/><line x1="9" y1="18" x2="20" y2="18"/><circle cx="4" cy="6" r="1.5" fill="currentColor" stroke="none"/><circle cx="4" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="4" cy="18" r="1.5" fill="currentColor" stroke="none"/></svg></button>
+          <button class="toolbar-btn" onclick="exec('insertOrderedList')" title="Numerada"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/></svg></button>
+          <div class="toolbar-sep"></div>
+          <button class="toolbar-btn" onclick="exec('outdent')" title="Recuar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="11 17 6 12 11 7"/><line x1="18" y1="12" x2="6" y2="12"/></svg></button>
+          <button class="toolbar-btn" onclick="exec('indent')" title="Avançar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="13 17 18 12 13 7"/><line x1="6" y1="12" x2="18" y2="12"/></svg></button>
+          <div class="toolbar-sep"></div>
+          <button class="toolbar-btn" onclick="insertHR()" title="Linha">—</button>
+          <button class="toolbar-btn" onclick="exec('undo')" title="Desfazer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg></button>
+          <button class="toolbar-btn" onclick="exec('redo')" title="Refazer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3L21 13"/></svg></button>
+          <div class="toolbar-sep"></div>
+          <button class="toolbar-btn" onclick="exec('removeFormat')" title="Limpar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16"/><line x1="3" y1="21" x2="21" y2="3"/></svg></button>
+        </div>
+        <div class="editor-area">
+          <div class="editor-content" id="editorContent" contenteditable="true"
+               oninput="onEditorInput()" onkeydown="onEditorKeydown(event)"></div>
+        </div>
+        <div class="editor-statusbar">
+          <span id="wordCount">0 palavras</span>
+          <span id="charCount">0 caracteres</span>
+          <div class="status-saved" id="statusSaved">
+            <div class="status-dot"></div><span>Salvo</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: NOVO MANUAL -->
+<div class="modal-overlay" id="newDocModal" onclick="if(event.target===this) closeNewDocModal()">
+  <div class="modal">
+    <h3>Novo manual</h3>
+    <div class="field-group">
+      <div class="field-label">Título do manual</div>
+      <input class="field-input" id="newDocTitle" type="text"
+             placeholder="Ex: Manual do Usuário — Visão Geral"
+             onkeydown="if(event.key==='Enter') confirmNewDoc()">
+    </div>
+    <div class="field-group">
+      <div class="field-label">Sistema relacionado</div>
+      <div class="sys-option-grid" id="sysOptionGrid"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-modal-cancel" onclick="closeNewDocModal()">Cancelar</button>
+      <button class="btn-save" onclick="confirmNewDoc()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Criar manual
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: CONFIRMAR EXCLUSÃO -->
+<div class="modal-overlay" id="deleteModal" onclick="if(event.target===this) closeDeleteModal()">
+  <div class="modal">
+    <h3>Excluir manual</h3>
+    <p>Tem certeza que deseja excluir "<span id="deleteDocName"></span>"? Esta ação não pode ser desfeita.</p>
+    <div class="modal-actions">
+      <button class="btn-modal-cancel" onclick="closeDeleteModal()">Cancelar</button>
+      <button class="btn-confirm-delete" id="btnConfirmDelete" onclick="deleteDoc()">Excluir</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <span id="toastIcon"></span>
+  <span id="toastMsg"></span>
+</div>
+
+<script>
+// ══════════════════════════════════════════
+// SUPABASE CONFIG
+// ══════════════════════════════════════════
+const SUPABASE_URL  = 'https://ccbjhuuzidqxeplrvtrj.supabase.co';
+const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjYmpodXV6aWRxeGVwbHJ2dHJqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4NDA5MjMsImV4cCI6MjA4OTQxNjkyM30.HVfW1Co6vUw9NDJWoV3pUU53w-preCFyYENr3CAagec';
+const TABLE         = 'manuais';
+const HEADERS       = { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY };
+
+async function sbFetch(path, options = {}) {
+  const res = await fetch(SUPABASE_URL + '/rest/v1/' + path, {
+    headers: { ...HEADERS, 'Prefer': 'return=representation', ...(options.headers || {}) },
+    ...options
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || err.error || `HTTP ${res.status}`);
+  }
+  const text = await res.text();
+  return text ? JSON.parse(text) : [];
+}
+
+// ══════════════════════════════════════════
+// SISTEMAS CADASTRADOS
+// ══════════════════════════════════════════
+const SYSTEMS = [
+  { id: 'SISMAT', name: 'SISMAT', fullName: 'Sistema de Gestão de Materiais e Almoxarifado', icon: '📦', status: 'Ativo', color: 'sismat' },
+];
+
+// ══════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════
+let docs = [];
+let currentId   = null;
+let editingId   = null;
+let filterSystem = 'all';
+let searchQ      = '';
+let saveTimer    = null;
+let newDocSelectedSystem = SYSTEMS[0].id;
+
+// ══════════════════════════════════════════
+// DB STATUS UI
+// ══════════════════════════════════════════
+function setDbStatus(state, label) {
+  const dot = document.getElementById('dbDot');
+  const lbl = document.getElementById('dbLabel');
+  dot.className = 'dot ' + state;
+  lbl.textContent = label;
+}
+
+// ══════════════════════════════════════════
+// SUPABASE CRUD
+// ══════════════════════════════════════════
+async function dbLoad() {
+  setDbStatus('loading', 'Conectando…');
+  try {
+    const data = await sbFetch(TABLE + '?order=updated_at.desc&select=*');
+    docs = data;
+    setDbStatus('ok', 'Supabase');
+    renderSystemTabs();
+    renderList();
+    showPanel('empty');
+  } catch (e) {
+    setDbStatus('err', 'Erro de conexão');
+    document.getElementById('docList').innerHTML = `<div class="list-empty">Não foi possível conectar ao banco.<br>${e.message}</div>`;
+    document.getElementById('sidebarFooter').textContent = 'Erro';
+    showToast('❌', 'Erro ao carregar: ' + e.message, true);
+  }
+}
+
+async function dbInsert(doc) {
+  const rows = await sbFetch(TABLE, {
+    method: 'POST',
+    body: JSON.stringify({ system: doc.system, title: doc.title, content: doc.content })
+  });
+  return Array.isArray(rows) ? rows[0] : rows;
+}
+
+async function dbUpdate(id, doc) {
+  const rows = await sbFetch(TABLE + '?id=eq.' + id, {
+    method: 'PATCH',
+    body: JSON.stringify({ system: doc.system, title: doc.title, content: doc.content })
+  });
+  return Array.isArray(rows) ? rows[0] : rows;
+}
+
+async function dbDelete(id) {
+  await sbFetch(TABLE + '?id=eq.' + id, { method: 'DELETE', headers: { 'Prefer': '' } });
+}
+
+// ══════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════
+function fmtDate(iso) { return new Date(iso).toLocaleDateString('pt-BR', { day:'2-digit', month:'short', year:'numeric' }); }
+function stripHtml(html) { const d = document.createElement('div'); d.innerHTML = html; return d.textContent || ''; }
+function wordCount(html) { const t = stripHtml(html).trim(); return t ? t.split(/\s+/).filter(Boolean).length : 0; }
+function getSys(id) { return SYSTEMS.find(s => s.id === id) || { id, name: id, fullName: id, icon: '📄', status: '' }; }
+function escHtml(t) { return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ══════════════════════════════════════════
+// RENDER SYSTEM TABS
+// ══════════════════════════════════════════
+function renderSystemTabs() {
+  document.getElementById('systemTabsContainer').innerHTML = SYSTEMS.map(s => `
+    <button class="sys-tab" onclick="setSystem('${s.id}', this)" id="tab_${s.id}">
+      <div class="sys-tab-icon ${s.color}">${s.icon}</div>
+      <div class="sys-tab-info">
+        <div class="sys-tab-name">${s.name}</div>
+        <div class="sys-tab-count" id="count_${s.id}">—</div>
+      </div>
+      ${s.status ? `<span class="sys-tab-pill">${s.status}</span>` : ''}
+    </button>
+  `).join('');
+}
+
+function populateSysSelect(selectedId) {
+  document.getElementById('editorSysSelect').innerHTML = SYSTEMS.map(s =>
+    `<option value="${s.id}" ${s.id === selectedId ? 'selected' : ''}>${s.icon} ${s.name}</option>`
+  ).join('');
+}
+
+// ══════════════════════════════════════════
+// RENDER LIST
+// ══════════════════════════════════════════
+function renderList() {
+  const allCount = docs.length;
+  document.getElementById('countAll').textContent = allCount + ' manual' + (allCount !== 1 ? 'is' : '');
+  SYSTEMS.forEach(s => {
+    const el = document.getElementById('count_' + s.id);
+    if (el) { const n = docs.filter(d => d.system === s.id).length; el.textContent = n + ' manual' + (n !== 1 ? 'is' : ''); }
+  });
+  document.getElementById('topbarInfo').textContent = allCount + ' manual' + (allCount !== 1 ? 'is' : '') + ' no repositório';
+
+  let filtered = docs.filter(d => {
+    const matchSys = filterSystem === 'all' || d.system === filterSystem;
+    const matchQ   = !searchQ || d.title.toLowerCase().includes(searchQ.toLowerCase()) || stripHtml(d.content).toLowerCase().includes(searchQ.toLowerCase());
+    return matchSys && matchQ;
+  });
+
+  document.getElementById('sidebarFooter').textContent =
+    filtered.length + ' manual' + (filtered.length !== 1 ? 'is' : '') + ' encontrado' + (filtered.length !== 1 ? 's' : '');
+
+  const list = document.getElementById('docList');
+  if (filtered.length === 0) { list.innerHTML = `<div class="list-empty">Nenhum manual encontrado.</div>`; return; }
+
+  const groups = {};
+  filtered.forEach(d => { if (!groups[d.system]) groups[d.system] = []; groups[d.system].push(d); });
+
+  list.innerHTML = Object.entries(groups).map(([sysId, items]) => {
+    const sys = getSys(sysId);
+    const header = filterSystem === 'all'
+      ? `<div class="doc-group-header"><span class="doc-group-label">${sys.icon} ${sys.name}</span><div class="doc-group-line"></div></div>`
+      : '';
+    return header + items.map((d, i) => `
+      <div class="doc-item ${d.id === currentId ? 'active' : ''}" style="animation-delay:${i*25}ms" onclick="openDoc('${d.id}')">
+        <div class="doc-item-title">${escHtml(d.title || 'Sem título')}</div>
+        <div class="doc-item-meta"><span class="sys-badge">${d.system}</span>${fmtDate(d.updated_at)}</div>
+        <div class="doc-item-preview">${escHtml(stripHtml(d.content))}</div>
+        <div class="doc-item-actions">
+          <button class="icon-btn" title="Editar" onclick="event.stopPropagation(); openDoc('${d.id}'); editCurrent()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+          <button class="icon-btn danger" title="Excluir" onclick="event.stopPropagation(); currentId='${d.id}'; confirmDelete()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+          </button>
+        </div>
+      </div>`).join('');
+  }).join('');
+}
+
+// ══════════════════════════════════════════
+// OPEN / VIEW
+// ══════════════════════════════════════════
+function openDoc(id) {
+  currentId = id;
+  const doc = docs.find(d => d.id === id);
+  if (!doc) return;
+  const sys = getSys(doc.system);
+  showPanel('viewer');
+  document.getElementById('viewerTitle').textContent      = doc.title || 'Sem título';
+  document.getElementById('viewerSysBadge').innerHTML     = `<span class="sys-badge">${sys.icon} ${sys.name}</span>`;
+  document.getElementById('viewerMeta').textContent       = `${fmtDate(doc.updated_at)} · ${wordCount(doc.content)} palavras`;
+  document.getElementById('viewerDocTitle').textContent   = doc.title || 'Sem título';
+  document.getElementById('viewerDocByline').innerHTML    = `<span class="sys-badge">${sys.icon} ${sys.name}</span><span>${sys.fullName}</span><span>·</span><span>Criado em ${fmtDate(doc.created_at)}</span><span>·</span><span>${wordCount(doc.content)} palavras</span>`;
+  document.getElementById('viewerDocBody').innerHTML      = doc.content;
+  renderList();
+}
+
+// ══════════════════════════════════════════
+// NEW DOC MODAL
+// ══════════════════════════════════════════
+function openNewDocModal() {
+  newDocSelectedSystem = SYSTEMS[0].id;
+  document.getElementById('newDocTitle').value = '';
+  document.getElementById('sysOptionGrid').innerHTML = SYSTEMS.map(s => `
+    <div class="sys-option ${s.id === newDocSelectedSystem ? 'selected' : ''}" onclick="selectSysOption('${s.id}', this)">
+      <div class="sys-option-icon">${s.icon}</div>
+      <div class="sys-option-text">
+        <div class="sys-option-name">${s.name}</div>
+        <div class="sys-option-full">${s.fullName}</div>
+      </div>
+      <div class="sys-option-check"></div>
+    </div>`).join('');
+  document.getElementById('newDocModal').classList.add('open');
+  setTimeout(() => document.getElementById('newDocTitle').focus(), 160);
+}
+
+function selectSysOption(id, el) {
+  newDocSelectedSystem = id;
+  document.querySelectorAll('.sys-option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function closeNewDocModal() { document.getElementById('newDocModal').classList.remove('open'); }
+
+function confirmNewDoc() {
+  const title = document.getElementById('newDocTitle').value.trim();
+  closeNewDocModal();
+  editingId = null; currentId = null;
+  showPanel('editor');
+  populateSysSelect(newDocSelectedSystem);
+  document.getElementById('editorTitleInput').value = title;
+  document.getElementById('editorContent').innerHTML = '';
+  updateWordCount();
+  renderList();
+  setTimeout(() => { title ? document.getElementById('editorContent').focus() : document.getElementById('editorTitleInput').focus(); }, 50);
+}
+
+// ══════════════════════════════════════════
+// EDIT
+// ══════════════════════════════════════════
+function editCurrent() {
+  const doc = docs.find(d => d.id === currentId);
+  if (!doc) return;
+  editingId = doc.id;
+  showPanel('editor');
+  populateSysSelect(doc.system);
+  document.getElementById('editorTitleInput').value      = doc.title;
+  document.getElementById('editorSysSelect').value       = doc.system;
+  document.getElementById('editorContent').innerHTML     = doc.content;
+  updateWordCount();
+}
+
+function cancelEdit() { currentId ? openDoc(currentId) : showPanel('empty'); editingId = null; }
+
+// ══════════════════════════════════════════
+// SAVE → Supabase
+// ══════════════════════════════════════════
+async function saveDoc() {
+  const title   = document.getElementById('editorTitleInput').value.trim() || 'Sem título';
+  const system  = document.getElementById('editorSysSelect').value;
+  const content = document.getElementById('editorContent').innerHTML;
+
+  const btn = document.getElementById('btnSave');
+  btn.disabled = true;
+  btn.innerHTML = '…';
+  setSaved('loading');
+
+  try {
+    if (editingId) {
+      const updated = await dbUpdate(editingId, { system, title, content });
+      const idx = docs.findIndex(d => d.id === editingId);
+      if (idx !== -1) docs[idx] = updated;
+      currentId = editingId;
+    } else {
+      const inserted = await dbInsert({ system, title, content });
+      docs.unshift(inserted);
+      currentId = inserted.id;
+    }
+    editingId = null;
+    openDoc(currentId);
+    showToast('✅', 'Manual salvo com sucesso!');
+    setSaved('ok');
+  } catch (e) {
+    showToast('❌', 'Erro ao salvar: ' + e.message, true);
+    setSaved('err');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Salvar`;
+  }
+}
+
+// ══════════════════════════════════════════
+// DELETE → Supabase
+// ══════════════════════════════════════════
+function confirmDelete() {
+  const doc = docs.find(d => d.id === currentId);
+  if (!doc) return;
+  document.getElementById('deleteDocName').textContent = doc.title;
+  document.getElementById('deleteModal').classList.add('open');
+}
+
+function closeDeleteModal() { document.getElementById('deleteModal').classList.remove('open'); }
+
+async function deleteDoc() {
+  const btn = document.getElementById('btnConfirmDelete');
+  btn.disabled = true;
+  btn.textContent = 'Excluindo…';
+  try {
+    await dbDelete(currentId);
+    docs = docs.filter(d => d.id !== currentId);
+    closeDeleteModal();
+    currentId = null;
+    showPanel('empty');
+    renderList();
+    showToast('🗑️', 'Manual excluído.');
+  } catch (e) {
+    showToast('❌', 'Erro ao excluir: ' + e.message, true);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Excluir';
+  }
+}
+
+// ══════════════════════════════════════════
+// PANELS
+// ══════════════════════════════════════════
+function showPanel(name) {
+  document.getElementById('emptyState').style.display  = name === 'empty'  ? 'flex' : 'none';
+  document.getElementById('viewerPanel').style.display = name === 'viewer' ? 'flex' : 'none';
+  document.getElementById('editorPanel').style.display = name === 'editor' ? 'flex' : 'none';
+}
+
+// ══════════════════════════════════════════
+// FILTER / SEARCH
+// ══════════════════════════════════════════
+function setSystem(sys, btn) {
+  filterSystem = sys;
+  document.querySelectorAll('.sys-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderList();
+}
+function filterDocs(q) { searchQ = q; renderList(); }
+
+// ══════════════════════════════════════════
+// EDITOR
+// ══════════════════════════════════════════
+function exec(cmd) { document.getElementById('editorContent').focus(); document.execCommand(cmd, false, null); }
+function formatBlock(tag) { if (!tag) return; document.getElementById('editorContent').focus(); document.execCommand('formatBlock', false, tag); }
+function insertHR() { document.getElementById('editorContent').focus(); document.execCommand('insertHTML', false, '<hr>'); }
+
+function setSaved(state) {
+  const el = document.getElementById('statusSaved');
+  const states = {
+    ok:      { dot:'#22C55E', text:'Salvo no Supabase' },
+    loading: { dot:'#F59E0B', text:'Salvando…' },
+    editing: { dot:'#F59E0B', text:'Editando…' },
+    err:     { dot:'#EF4444', text:'Erro ao salvar' },
+    unsaved: { dot:'#EF4444', text:'Não salvo' },
+  };
+  const s = states[state] || states.ok;
+  el.innerHTML = `<div class="status-dot" style="background:${s.dot}"></div><span>${s.text}</span>`;
+}
+
+function onEditorInput() {
+  updateWordCount();
+  setSaved('editing');
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => setSaved('unsaved'), 2500);
+}
+function onEditorKeydown(e) { if (e.ctrlKey && e.key === 's') { e.preventDefault(); saveDoc(); } }
+function updateWordCount() {
+  const text  = stripHtml(document.getElementById('editorContent').innerHTML);
+  const words = text.trim() ? text.trim().split(/\s+/).filter(Boolean).length : 0;
+  document.getElementById('wordCount').textContent = words + ' palavra' + (words !== 1 ? 's' : '');
+  document.getElementById('charCount').textContent = text.length + ' caractere' + (text.length !== 1 ? 's' : '');
+}
+
+// ══════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════
+let toastTimer;
+function showToast(icon, msg, isError = false) {
+  const t = document.getElementById('toast');
+  document.getElementById('toastIcon').textContent = icon;
+  document.getElementById('toastMsg').textContent  = msg;
+  t.className = 'toast' + (isError ? ' error' : '');
+  void t.offsetWidth;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), isError ? 4000 : 2800);
+}
+
+// ══════════════════════════════════════════
+// KEYBOARD
+// ══════════════════════════════════════════
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closeDeleteModal(); closeNewDocModal(); }
+});
+
+// ══════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════
+dbLoad();
+</script>
+</body>
+</html>
