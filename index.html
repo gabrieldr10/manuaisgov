@@ -155,10 +155,18 @@
           <button class="toolbar-btn" onclick="exec('redo')" title="Refazer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3L21 13"/></svg></button>
           <div class="toolbar-sep"></div>
           <button class="toolbar-btn" onclick="exec('removeFormat')" title="Limpar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16"/><line x1="3" y1="21" x2="21" y2="3"/></svg></button>
+          <div class="toolbar-sep"></div>
+          <button class="toolbar-btn toolbar-btn-html" id="btnToggleHtml" onclick="toggleHtmlMode()" title="Visualizar/ocultar HTML">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+            HTML
+          </button>
         </div>
         <div class="editor-area">
           <div class="editor-content" id="editorContent" contenteditable="true"
                oninput="onEditorInput()" onkeydown="onEditorKeydown(event)"></div>
+          <textarea class="editor-html" id="editorHtml" spellcheck="false"
+                    oninput="onHtmlInput()" onkeydown="onEditorKeydown(event)"
+                    placeholder="<!-- HTML do conteúdo aparece aqui… -->"></textarea>
         </div>
         <div class="editor-statusbar">
           <span id="wordCount">0 palavras</span>

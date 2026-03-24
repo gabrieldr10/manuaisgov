@@ -238,6 +238,7 @@ function confirmNewDoc() {
   const title = document.getElementById('newDocTitle').value.trim();
   closeNewDocModal();
   editingId = null; currentId = null;
+  resetHtmlMode();
   showPanel('editor');
   populateSysSelect(newDocSelectedSystem);
   document.getElementById('editorTitleInput').value  = title;
@@ -358,6 +359,7 @@ function editCurrent() {
   const doc = docs.find(d => d.id === currentId);
   if (!doc) return;
   editingId = doc.id;
+  resetHtmlMode();
   showPanel('editor');
   populateSysSelect(doc.system);
   document.getElementById('editorTitleInput').value  = doc.title || '';
@@ -372,7 +374,10 @@ function cancelEdit() { currentId ? openDoc(currentId) : showPanel('empty'); edi
 async function saveDoc() {
   const title   = document.getElementById('editorTitleInput').value.trim() || 'Sem título';
   const system  = document.getElementById('editorSysSelect').value || null;
-  const content = document.getElementById('editorContent').innerHTML;
+  // Se estiver em modo HTML, usa o valor da textarea; caso contrário, usa o innerHTML
+  const content = htmlModeActive
+    ? document.getElementById('editorHtml').value
+    : document.getElementById('editorContent').innerHTML;
   const btn     = document.getElementById('btnSave');
   btn.disabled  = true; btn.innerHTML = '…'; setSaved('loading');
 
@@ -462,6 +467,98 @@ function filterDocs(q) { searchQ = q; renderList(); }
 function exec(cmd) { document.getElementById('editorContent').focus(); document.execCommand(cmd, false, null); }
 function formatBlock(tag) { if (!tag) return; document.getElementById('editorContent').focus(); document.execCommand('formatBlock', false, tag); }
 function insertHR() { document.getElementById('editorContent').focus(); document.execCommand('insertHTML', false, '<hr>'); }
+
+// ══════════════════════════════════════════
+// HTML MODE TOGGLE
+// ══════════════════════════════════════════
+let htmlModeActive = false;
+
+function resetHtmlMode() {
+  if (!htmlModeActive) return;
+  htmlModeActive = false;
+  const editorContent = document.getElementById('editorContent');
+  const editorHtml    = document.getElementById('editorHtml');
+  const btn           = document.getElementById('btnToggleHtml');
+  const toolbar       = document.querySelector('.editor-toolbar');
+  // Aplica conteúdo da textarea antes de fechar
+  editorContent.innerHTML = editorHtml.value;
+  editorContent.style.display = 'block';
+  editorHtml.style.display    = 'none';
+  btn.classList.remove('active');
+  toolbar.querySelectorAll('.toolbar-btn:not(#btnToggleHtml), .toolbar-select, .toolbar-sep').forEach(el => {
+    el.style.opacity = '';
+    el.style.pointerEvents = '';
+  });
+}
+
+function toggleHtmlMode() {
+  htmlModeActive = !htmlModeActive;
+  const editorContent = document.getElementById('editorContent');
+  const editorHtml    = document.getElementById('editorHtml');
+  const btn           = document.getElementById('btnToggleHtml');
+  const toolbar       = document.querySelector('.editor-toolbar');
+
+  if (htmlModeActive) {
+    // Copia o HTML atual para a textarea
+    editorHtml.value = formatHtml(editorContent.innerHTML);
+    editorContent.style.display = 'none';
+    editorHtml.style.display    = 'block';
+    btn.classList.add('active');
+    // Desabilita botões da toolbar que não fazem sentido no modo HTML
+    toolbar.querySelectorAll('.toolbar-btn:not(#btnToggleHtml), .toolbar-select, .toolbar-sep').forEach(el => {
+      el.style.opacity = '0.3';
+      el.style.pointerEvents = 'none';
+    });
+    editorHtml.focus();
+  } else {
+    // Aplica o HTML editado de volta ao contenteditable
+    editorContent.innerHTML = editorHtml.value;
+    editorContent.style.display = 'block';
+    editorHtml.style.display    = 'none';
+    btn.classList.remove('active');
+    toolbar.querySelectorAll('.toolbar-btn:not(#btnToggleHtml), .toolbar-select, .toolbar-sep').forEach(el => {
+      el.style.opacity = '';
+      el.style.pointerEvents = '';
+    });
+    updateWordCount();
+    setSaved('editing');
+  }
+}
+
+function onHtmlInput() {
+  // Sincroniza contagem enquanto edita o HTML
+  const text = stripHtml(document.getElementById('editorHtml').value);
+  const words = text.trim() ? text.trim().split(/\s+/).filter(Boolean).length : 0;
+  document.getElementById('wordCount').textContent = words + ' palavra' + (words !== 1 ? 's' : '');
+  document.getElementById('charCount').textContent = text.length + ' caractere' + (text.length !== 1 ? 's' : '');
+  setSaved('editing');
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => setSaved('unsaved'), 2500);
+}
+
+function formatHtml(html) {
+  // Indentação simples do HTML para facilitar leitura
+  let formatted = '';
+  let indent = 0;
+  const tags = html.match(/(<[^>]+>|[^<]+)/g) || [];
+  const inlineTags = /^<(span|a|b|i|u|strong|em|code|br|img|svg|path|polyline|line|circle|rect)[^>]*>/i;
+  const voidTags   = /^<(br|hr|img|input|meta|link)[^>]*\/?>/i;
+  const closingTag = /^<\//;
+  tags.forEach(tok => {
+    const trimmed = tok.trim();
+    if (!trimmed) return;
+    if (closingTag.test(trimmed) && !inlineTags.test(trimmed)) {
+      indent = Math.max(0, indent - 1);
+      formatted += '  '.repeat(indent) + trimmed + '\n';
+    } else if (/<[^/][^>]*>/.test(trimmed) && !inlineTags.test(trimmed) && !voidTags.test(trimmed)) {
+      formatted += '  '.repeat(indent) + trimmed + '\n';
+      indent++;
+    } else {
+      formatted += '  '.repeat(indent) + trimmed + '\n';
+    }
+  });
+  return formatted.trim();
+}
 
 function setSaved(state) {
   const map = { ok:{dot:'#22C55E',text:'Salvo'}, loading:{dot:'#F59E0B',text:'Salvando…'}, editing:{dot:'#F59E0B',text:'Editando…'}, err:{dot:'#EF4444',text:'Erro'}, unsaved:{dot:'#EF4444',text:'Não salvo'} };
