@@ -579,6 +579,190 @@ function updateWordCount() {
 }
 
 // ══════════════════════════════════════════
+// EXPORT PDF
+// ══════════════════════════════════════════
+function exportPDF() {
+  const doc = docs.find(d => d.id === currentId);
+  if (!doc) return;
+  const sys = getSys(doc.system);
+
+  // Preenche preview do modal
+  document.getElementById('pdfThumbTitle').textContent = doc.title || 'Sem título';
+  document.getElementById('pdfThumbBadge').textContent = sys ? sys.icone + ' ' + sys.nome : '';
+  document.getElementById('pdfInfoTitle').textContent  = doc.title || 'Sem título';
+  document.getElementById('pdfInfoMeta').textContent   =
+    (sys ? sys.nome_completo + ' · ' : '') +
+    fmtDate(doc.updated_at) + ' · ' + wc(doc.content) + ' palavras';
+
+  document.getElementById('pdfModal').classList.add('open');
+}
+
+function closePdfModal() {
+  document.getElementById('pdfModal').classList.remove('open');
+}
+
+function confirmExportPDF() {
+  const doc = docs.find(d => d.id === currentId);
+  if (!doc) return;
+  const sys = getSys(doc.system);
+
+  const showHeader = document.getElementById('pdfOptHeader').checked;
+  const showMeta   = document.getElementById('pdfOptMeta').checked;
+  const showFooter = document.getElementById('pdfOptFooter').checked;
+  const showDate   = document.getElementById('pdfOptDate').checked;
+
+  const now = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
+
+  const headerHtml = showHeader ? `
+    <div class="pdf-header">
+      <div class="pdf-header-logo">
+        <div class="pdf-logo-mark">MG</div>
+        <span class="pdf-logo-name">ManuaisGov</span>
+      </div>
+      ${sys ? `<span class="pdf-header-sys">${sys.icone} ${escHtml(sys.nome)}</span>` : ''}
+    </div>` : '';
+
+  const metaHtml = showMeta ? `
+    <div class="pdf-doc-byline">
+      ${sys ? `<span class="pdf-badge">${escHtml(sys.nome)}</span><span>${escHtml(sys.nome_completo || '')}</span><span>·</span>` : ''}
+      <span>Criado em ${fmtDate(doc.created_at)}</span>
+      <span>·</span>
+      <span>Atualizado em ${fmtDate(doc.updated_at)}</span>
+      <span>·</span>
+      <span>${wc(doc.content)} palavras</span>
+      ${showDate ? `<span>·</span><span>Gerado em ${now}</span>` : ''}
+    </div>` : (showDate ? `<div class="pdf-doc-byline"><span>Gerado em ${now}</span></div>` : '');
+
+  const footerHtml = showFooter ? `
+    <div class="pdf-footer">
+      <span>ManuaisGov · ${sys ? escHtml(sys.nome) + ' · ' : ''}${escHtml(doc.title || 'Sem título')}</span>
+      <span class="pdf-page-num">Página <span class="pagenum"></span></span>
+    </div>` : '';
+
+  const printHtml = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>${escHtml(doc.title || 'Manual')}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { font-family: 'Geist', sans-serif; color: #1A1814; background: #fff; font-size: 11pt; line-height: 1.7; }
+
+    @page {
+      size: A4;
+      margin: 18mm 20mm 22mm 20mm;
+      ${showFooter ? `
+      @bottom-center {
+        content: "ManuaisGov";
+        font-size: 8pt;
+        color: #8A8680;
+      }` : ''}
+    }
+
+    .pdf-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding-bottom: 10pt; border-bottom: 1.5pt solid #C8602A;
+      margin-bottom: 18pt;
+    }
+    .pdf-header-logo { display: flex; align-items: center; gap: 8pt; }
+    .pdf-logo-mark {
+      width: 22pt; height: 22pt; background: #C8602A; border-radius: 5pt;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 9pt; font-weight: 700; color: #fff;
+    }
+    .pdf-logo-name { font-family: 'Instrument Serif', serif; font-size: 14pt; color: #1A1814; }
+    .pdf-header-sys {
+      font-size: 8.5pt; font-weight: 600; background: rgba(200,96,42,0.12);
+      color: #C8602A; padding: 3pt 8pt; border-radius: 4pt; letter-spacing: 0.04em;
+    }
+
+    .pdf-doc-title {
+      font-family: 'Instrument Serif', serif; font-size: 26pt; font-weight: 400;
+      color: #1A1814; line-height: 1.15; margin-bottom: 8pt;
+    }
+    .pdf-doc-byline {
+      font-size: 8.5pt; color: #8A8680; margin-bottom: 18pt;
+      padding-bottom: 14pt; border-bottom: 0.75pt solid rgba(26,24,20,0.1);
+      display: flex; align-items: center; gap: 8pt; flex-wrap: wrap;
+    }
+    .pdf-badge {
+      background: rgba(200,96,42,0.12); color: #C8602A;
+      font-size: 7.5pt; font-weight: 700; letter-spacing: 0.06em;
+      text-transform: uppercase; padding: 1.5pt 5pt; border-radius: 3pt;
+    }
+
+    .pdf-body { font-size: 11pt; line-height: 1.8; color: #4A4640; font-weight: 300; }
+    .pdf-body h1 { font-family: 'Instrument Serif', serif; font-size: 20pt; font-weight: 400; color: #1A1814; margin: 18pt 0 8pt; line-height: 1.2; page-break-after: avoid; }
+    .pdf-body h2 { font-family: 'Instrument Serif', serif; font-size: 15pt; font-weight: 400; color: #1A1814; margin: 14pt 0 6pt; page-break-after: avoid; }
+    .pdf-body h3 { font-size: 12pt; font-weight: 600; color: #1A1814; margin: 12pt 0 5pt; page-break-after: avoid; }
+    .pdf-body p { margin: 0 0 9pt; }
+    .pdf-body ul, .pdf-body ol { padding-left: 18pt; margin: 6pt 0 10pt; }
+    .pdf-body li { margin-bottom: 3pt; }
+    .pdf-body blockquote {
+      border-left: 3pt solid #C8602A; padding: 6pt 12pt;
+      margin: 12pt 0; color: #8A8680; font-style: italic;
+      background: rgba(200,96,42,0.06); border-radius: 0 4pt 4pt 0;
+    }
+    .pdf-body code {
+      background: #E4E0D7; padding: 1pt 4pt; border-radius: 3pt;
+      font-family: monospace; font-size: 9.5pt; color: #1A1814;
+    }
+    .pdf-body pre {
+      background: #1A1814; color: #F5F2ED; padding: 10pt; border-radius: 5pt;
+      font-family: monospace; font-size: 9pt; overflow: hidden;
+      margin: 10pt 0; white-space: pre-wrap; page-break-inside: avoid;
+    }
+    .pdf-body hr { border: none; border-top: 0.75pt solid rgba(26,24,20,0.1); margin: 16pt 0; }
+    .pdf-body strong { font-weight: 600; color: #1A1814; }
+    .pdf-body em { font-style: italic; }
+    .pdf-body a { color: #C8602A; text-decoration: underline; }
+    .pdf-body table { width: 100%; border-collapse: collapse; margin: 12pt 0; font-size: 10pt; }
+    .pdf-body th { background: #EDEAE3; font-weight: 600; padding: 6pt 10pt; border: 0.75pt solid rgba(26,24,20,0.15); text-align: left; }
+    .pdf-body td { padding: 5pt 10pt; border: 0.75pt solid rgba(26,24,20,0.1); }
+    .pdf-body tr:nth-child(even) td { background: rgba(26,24,20,0.02); }
+
+    .pdf-footer {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 6pt 20mm; border-top: 0.75pt solid rgba(26,24,20,0.12);
+      font-size: 7.5pt; color: #8A8680; background: #fff;
+    }
+
+    @media print {
+      body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .pdf-footer { position: running(footer); }
+    }
+  </style>
+</head>
+<body>
+  ${headerHtml}
+  <div class="pdf-doc-title">${escHtml(doc.title || 'Sem título')}</div>
+  ${metaHtml}
+  <div class="pdf-body">${doc.content || ''}</div>
+  ${footerHtml}
+  <script>
+    window.onload = function() {
+      window.print();
+      window.onafterprint = function() { window.close(); };
+    };
+  <\/script>
+</body>
+</html>`;
+
+  closePdfModal();
+  const win = window.open('', '_blank', 'width=900,height=700');
+  if (!win) {
+    showToast('❌', 'Permita pop-ups para gerar o PDF.', true);
+    return;
+  }
+  win.document.open();
+  win.document.write(printHtml);
+  win.document.close();
+  showToast('📄', 'PDF gerado! Escolha "Salvar como PDF" na impressão.');
+}
+
+// ══════════════════════════════════════════
 // TOAST
 // ══════════════════════════════════════════
 let toastTimer;
@@ -596,7 +780,7 @@ function showToast(icon, msg, isError = false) {
 // KEYBOARD
 // ══════════════════════════════════════════
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { closeDeleteModal(); closeNewDocModal(); closeNewSysModal(); closeDeleteSysModal(); }
+  if (e.key === 'Escape') { closeDeleteModal(); closeNewDocModal(); closeNewSysModal(); closeDeleteSysModal(); closePdfModal(); }
 });
 
 // ══════════════════════════════════════════

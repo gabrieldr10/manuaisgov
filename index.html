@@ -96,6 +96,10 @@
           <div class="viewer-title" id="viewerTitle"></div>
           <span id="viewerSysBadge"></span>
           <span class="viewer-meta" id="viewerMeta"></span>
+          <button class="btn-export-pdf" onclick="exportPDF()" title="Exportar como PDF">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            Exportar PDF
+          </button>
           <button class="btn-edit" onclick="editCurrent()">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
             Editar
@@ -260,6 +264,64 @@
     <div class="modal-actions">
       <button class="btn-modal-cancel" onclick="closeDeleteSysModal()">Cancelar</button>
       <button class="btn-confirm-delete" id="btnConfirmDeleteSys" onclick="confirmDeleteSys()">Remover</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: EXPORTAR PDF -->
+<div class="modal-overlay" id="pdfModal" onclick="if(event.target===this) closePdfModal()">
+  <div class="modal" style="width:480px;">
+    <h3>Exportar como PDF</h3>
+    <div class="pdf-preview-box" id="pdfPreviewBox">
+      <div class="pdf-page-thumb">
+        <div class="pdf-thumb-title" id="pdfThumbTitle"></div>
+        <div class="pdf-thumb-badge" id="pdfThumbBadge"></div>
+        <div class="pdf-thumb-lines">
+          <div class="pdf-thumb-line" style="width:90%"></div>
+          <div class="pdf-thumb-line" style="width:75%"></div>
+          <div class="pdf-thumb-line" style="width:85%"></div>
+          <div class="pdf-thumb-line" style="width:60%"></div>
+          <div class="pdf-thumb-line" style="width:80%"></div>
+          <div class="pdf-thumb-line" style="width:70%"></div>
+        </div>
+      </div>
+      <div class="pdf-preview-info">
+        <div class="pdf-info-title" id="pdfInfoTitle"></div>
+        <div class="pdf-info-meta" id="pdfInfoMeta"></div>
+        <div class="pdf-options">
+          <div class="pdf-option-row">
+            <label class="pdf-option-label">
+              <input type="checkbox" id="pdfOptHeader" checked> Incluir cabeçalho com logo
+            </label>
+          </div>
+          <div class="pdf-option-row">
+            <label class="pdf-option-label">
+              <input type="checkbox" id="pdfOptMeta" checked> Incluir informações do documento
+            </label>
+          </div>
+          <div class="pdf-option-row">
+            <label class="pdf-option-label">
+              <input type="checkbox" id="pdfOptFooter" checked> Incluir rodapé com paginação
+            </label>
+          </div>
+          <div class="pdf-option-row">
+            <label class="pdf-option-label">
+              <input type="checkbox" id="pdfOptDate" checked> Incluir data de geração
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="pdf-tip">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      Na janela de impressão, selecione <strong>"Salvar como PDF"</strong> como destino e defina as margens como <strong>"Padrão"</strong>.
+    </div>
+    <div class="modal-actions">
+      <button class="btn-modal-cancel" onclick="closePdfModal()">Cancelar</button>
+      <button class="btn-save" onclick="confirmExportPDF()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Gerar PDF
+      </button>
     </div>
   </div>
 </div>
